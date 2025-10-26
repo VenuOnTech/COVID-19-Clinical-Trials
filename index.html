@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Trial Success Predictor</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Simple loading spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            width: 1.25rem;
+            height: 1.25rem;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+    <!-- Main Container -->
+    <div class="container mx-auto p-4 md:p-8 max-w-2xl">
+
+        <!-- Header -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 text-center">
+                Clinical Trial Success Predictor
+            </h1>
+            <p class="text-center text-gray-600 mt-2">
+                Predict the likelihood of a trial being 'Completed' vs. 'Terminated' based on its setup.
+            </p>
+        </div>
+
+        <!-- Input Form -->
+        <form id="prediction-form" class="bg-white p-6 md:p-8 rounded-lg shadow-lg">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Enrollment -->
+                <div>
+                    <label for="enrollment" class="block text-sm font-medium text-gray-700">Enrollment</label>
+                    <input type="number" id="enrollment" name="enrollment" value="100" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Gender -->
+                <div>
+                    <label for="gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                    <select id="gender" name="gender" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option>All</option>
+                        <option>Female</option>
+                        <option>Male</option>
+                        <option>Unknown</option>
+                    </select>
+                </div>
+
+                <!-- Phases -->
+                <div>
+                    <label for="phases" class="block text-sm font-medium text-gray-700">Phases</label>
+                    <select id="phases" name="phases" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option>Not Applicable</option>
+                        <option>Early Phase 1</option>
+                        <option>Phase 1</option>
+                        <option>Phase 1|Phase 2</option>
+                        <option>Phase 2</option>
+                        <option>Phase 2|Phase 3</option>
+                        <option>Phase 3</option>
+                        <option>Phase 4</option>
+                        <option>Unknown</option>
+                    </select>
+                </div>
+
+                <!-- Study Type -->
+                <div>
+                    <label for="study-type" class="block text-sm font-medium text-gray-700">Study Type</label>
+                    <select id="study-type" name="study-type" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option>Interventional</option>
+                        <option>Observational</option>
+                        <option>Expanded Access</option>
+                        <option>Unknown</option>
+                    </select>
+                </div>
+
+                <!-- Funded Bys -->
+                <div class="md:col-span-2">
+                    <label for="funded-bys" class="block text-sm font-medium text-gray-700">Funded By</label>
+                    <select id="funded-bys" name="funded-bys" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option>Industry</option>
+                        <option>NIH</option>
+                        <option>Other U.S. Fed</option>
+                        <option>Other</option>
+                        <option>Unknown</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-8 text-center">
+                <button type="submit" id="predict-button" class="w-full md:w-1/2 inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+                    <span id="button-text">Predict Success</span>
+                    <div id="button-spinner" class="spinner hidden ml-2"></div>
+                </button>
+            </div>
+        </form>
+
+        <!-- Result Display -->
+        <div id="result-container" class="mt-6 bg-white p-6 rounded-lg shadow-lg hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 text-center mb-4">Prediction Result</h2>
+            <div id="result-bar-container" class="w-full bg-gray-200 rounded-full h-8 overflow-hidden">
+                <div id="result-bar" class="h-8 rounded-full text-white font-medium text-sm flex items-center justify-center transition-all duration-500 ease-out">
+                    <span id="result-text"></span>
+                </div>
+            </div>
+            <p class="text-center text-gray-600 mt-4">
+                This is a prediction of the likelihood that the trial will be 'Completed'.
+            </p>
+        </div>
+    </div>
+
+    <!-- 2. JAVASCRIPT LOGIC -->
+    <script>
+        // -----------------------------------------------------------------
+        // PART 1: PASTE YOUR MODEL DATA HERE
+        // -----------------------------------------------------------------
+        // Run the `train_trial_model.py` script in Colab.
+        // Copy the ENTIRE JSON object it prints and paste it below,
+        // replacing this placeholder object.
+        // -----------------------------------------------------------------
+        const modelData = {
+            "intercept": 3.878243373600095,
+            "scaling": {
+                "mean": 23085.922639362914,
+                "std": 452956.0606259459
+            },
+            "coefficients": {
+                "Enrollment": 0.17345530596615188,
+                "Phases_Early Phase 1": 0.3557003146509845,
+                "Phases_Not Applicable": 0.971531310158694,
+                "Phases_Phase 1": -0.05243561458191053,
+                "Phases_Phase 1|Phase 2": 0.30134933223135774,
+                "Phases_Phase 2": -0.7541487035378925,
+                "Phases_Phase 2|Phase 3": -0.808757070246669,
+                "Phases_Phase 3": -0.5903341960961973,
+                "Phases_Phase 4": -0.268914019008727,
+                "Phases_Unknown": 0.8764846060160852,
+                "Funded Bys_Industry": -0.41895881333845486,
+                "Funded Bys_Industry|Other": 0.48795038059700824,
+                "Funded Bys_NIH": -0.18890458863483456,
+                "Funded Bys_NIH|Industry": 0.007893698187844488,
+                "Funded Bys_NIH|Other": 0.007442289282936122,
+                "Funded Bys_Other": -0.5205915688237951,
+                "Funded Bys_Other|Industry": 0.1062486708328095,
+                "Funded Bys_Other|NIH": 0.4721955902539956,
+                "Funded Bys_U.S. Fed": 0.007912339997933124,
+                "Funded Bys_U.S. Fed|Other": 0.06928796123027967,
+                "Study Type_Interventional": -0.8460086464303624,
+                "Study Type_Observational": 0.8764846060160852,
+                "Gender_All": -0.6360308244585591,
+                "Gender_Female": 0.22121725396280142,
+                "Gender_Male": 0.4110265151925022,
+                "Gender_Unknown": 0.034263014888975735
+            }
+        };
+        // -----------------------------------------------------------------
+        // END OF MODEL DATA
+        // -----------------------------------------------------------------
+
+
+        // --- Get DOM elements ---
+        const form = document.getElementById('prediction-form');
+        const predictButton = document.getElementById('predict-button');
+        const buttonText = document.getElementById('button-text');
+        const buttonSpinner = document.getElementById('button-spinner');
+        const resultContainer = document.getElementById('result-container');
+        const resultBar = document.getElementById('result-bar');
+        const resultText = document.getElementById('result-text');
+
+        // --- Attach event listener ---
+        form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Stop form from submitting
+            runPrediction();
+        });
+
+        function runPrediction() {
+            // 1. Show loading state
+            buttonText.textContent = 'Predicting...';
+            buttonSpinner.classList.remove('hidden');
+            predictButton.disabled = true;
+
+            // 2. Get form values
+            const formValues = {
+                enrollment: parseFloat(document.getElementById('enrollment').value),
+                gender: document.getElementById('gender').value,
+                phases: document.getElementById('phases').value,
+                studyType: document.getElementById('study-type').value,
+                fundedBys: document.getElementById('funded-bys').value
+            };
+
+            // 3. Create the feature vector (this mimics the Python pipeline)
+            let logOdds = modelData.intercept;
+
+            // 3a. Process numerical feature (Enrollment)
+            const scaledEnrollment = (formValues.enrollment - modelData.scaling.mean) / modelData.scaling.std;
+            logOdds += scaledEnrollment * (modelData.coefficients['Enrollment'] || 0);
+
+            // 3b. Process categorical features (One-Hot Encoding in JS)
+            // Loop through all coefficients. If the feature name matches the
+            // selected value, we add its coefficient (as if it's a '1' in the OHE).
+            for (const key in modelData.coefficients) {
+                if (key.startsWith('Gender_')) {
+                    if (key === 'Gender_' + formValues.gender) {
+                        logOdds += modelData.coefficients[key];
+                    }
+                } else if (key.startsWith('Phases_')) {
+                    if (key === 'Phases_' + formValues.phases) {
+                        logOdds += modelData.coefficients[key];
+                    }
+                } else if (key.startsWith('Study Type_')) {
+                    if (key === 'Study Type_' + formValues.studyType) {
+                        logOdds += modelData.coefficients[key];
+                    }
+                } else if (key.startsWith('Funded Bys_')) {
+                    if (key === 'Funded Bys_' + formValues.fundedBys) {
+                        logOdds += modelData.coefficients[key];
+                    }
+                }
+            }
+
+            // 4. Apply the Sigmoid function to get a probability
+            // This is the core of Logistic Regression
+            const probability = 1 / (1 + Math.exp(-logOdds));
+            const probabilityPercent = (probability * 100).toFixed(1);
+
+            // 5. Simulate a short delay to show the spinner
+            setTimeout(() => {
+                // 6. Display the result
+                showResult(probabilityPercent);
+
+                // 7. Reset button
+                buttonText.textContent = 'Predict Success';
+                buttonSpinner.classList.add('hidden');
+                predictButton.disabled = false;
+            }, 500);
+        }
+
+        function showResult(percent) {
+            resultText.textContent = `${percent}% Likelihood to Complete`;
+            resultContainer.classList.remove('hidden');
+
+            // Clear old color classes
+            resultBar.classList.remove('bg-green-600', 'bg-red-600', 'bg-yellow-500');
+
+            // Apply new style based on probability
+            if (percent > 65) {
+                resultBar.classList.add('bg-green-600');
+            } else if (percent > 35) {
+                resultBar.classList.add('bg-yellow-500');
+            } else {
+                resultBar.classList.add('bg-red-600');
+            }
+
+            // Set the width
+            resultBar.style.width = percent + '%';
+        }
+
+    </script>
+</body>
+</html>
